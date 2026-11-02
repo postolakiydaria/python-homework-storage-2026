@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 
 
+DEFAULT_INTEREST_RATE = 5.0
+WITHDRAW_LIMIT_PERCENT = 0.5
+
 class BankAccount:
     """
     Класс банковского счета.
     """
     def __init__(self, owner, initial_balance=0.0):
-        self.__owner = owner
+        self._owner = owner
         if initial_balance < 0:
             raise ValueError("Начальный баланс не может быть отрицательным")
-        self.__balance = initial_balance
-        self.__history = []
+        self._balance = initial_balance
+        self._history = []
         if initial_balance > 0:
-            self.__history.append(f"Открытие счета на сумму: {initial_balance}")
+            self._history.append(f"Открытие счета на сумму: {initial_balance}")
 
     @property
     def owner(self):
@@ -20,7 +23,7 @@ class BankAccount:
         Возвращает владельца счета.
         :return: Имя владельца.
         """
-        return self.__owner
+        return self._owner
 
     @property
     def balance(self):
@@ -28,14 +31,14 @@ class BankAccount:
         Возвращает текущий баланс.
         :return: Баланс.
         """
-        return self.__balance
+        return self._balance
 
     def get_history(self):
         """
         Возвращает копию истории операций.
         :return: Список операций.
         """
-        return self.__history[:]
+        return self._history[:]
 
     def deposit(self, amount):
         """
@@ -45,8 +48,8 @@ class BankAccount:
         """
         if amount <= 0:
             raise ValueError("Сумма пополнения должна быть больше нуля")
-        self.__balance += amount
-        self.__history.append(f"Пополнение: +{amount}. Баланс: {self.__balance}")
+        self._balance += amount
+        self._history.append(f"Пополнение: +{amount}. Баланс: {self._balance}")
 
     def withdraw(self, amount):
         """
@@ -56,10 +59,10 @@ class BankAccount:
         """
         if amount <= 0:
             raise ValueError("Сумма снятия должна быть больше нуля")
-        if amount > self.__balance:
+        if amount > self._balance:
             raise ValueError("Недостаточно средств на счете")
-        self.__balance -= amount
-        self.__history.append(f"Снятие: -{amount}. Баланс: {self.__balance}")
+        self._balance -= amount
+        self._history.append(f"Снятие: -{amount}. Баланс: {self._balance}")
 
     @classmethod
     def create_account(cls, owner, initial_balance=0.0):
@@ -75,9 +78,9 @@ class SavingsAccount(BankAccount):
     """
     Класс сберегательного счета. Наследуется от BankAccount.
     """
-    def __init__(self, owner, initial_balance=0.0, interest_rate=5.0):
+    def __init__(self, owner, initial_balance=0.0, interest_rate=DEFAULT_INTEREST_RATE):
         super().__init__(owner, initial_balance)
-        self.__interest_rate = interest_rate
+        self._interest_rate = interest_rate
 
     @property
     def interest_rate(self):
@@ -85,13 +88,13 @@ class SavingsAccount(BankAccount):
         Возвращает процентную ставку.
         :return: Ставка в процентах.
         """
-        return self.__interest_rate
+        return self._interest_rate
 
     def apply_interest(self):
         """
         Начисляет проценты на текущий баланс.
         """
-        interest_amount = self.balance * (self.__interest_rate / 100)
+        interest_amount = self.balance * (self._interest_rate / 100)
         self.deposit(interest_amount)
 
     def withdraw(self, amount):
@@ -100,9 +103,9 @@ class SavingsAccount(BankAccount):
         :param amount: Сумма снятия.
         :raises ValueError: Если сумма превышает 50% баланса.
         """
-        max_withdraw = self.balance * 0.5
+        max_withdraw = self.balance * WITHDRAW_LIMIT_PERCENT
         if amount > max_withdraw:
-            raise ValueError(f"Нельзя снять больше 50% баланса (максимум {max_withdraw})")
+            raise ValueError(f"Нельзя снять больше {WITHDRAW_LIMIT_PERCENT * 100}% баланса (максимум {max_withdraw})")
         super().withdraw(amount) # если проверка прошла, вызываем метод родителя (он сделает остальные проверки)
 
 if __name__ == '__main__':
@@ -125,7 +128,7 @@ if __name__ == '__main__':
 
     print("\n3. Невозможность изменить баланс напрямую")
     try:
-        account.balance = 100000 # пытаемся сломать инкапсуляцию
+        account.balance = 100000
     except AttributeError as e:
         print("Ошибка: Нельзя изменить баланс напрямую! (нет сеттера)")
 
@@ -140,7 +143,7 @@ if __name__ == '__main__':
     savings.apply_interest()
     print(f"Баланс Марии после начисления 10%: {savings.balance}")
 
-    accounts = [account, savings]
+    accounts = (account, savings)
 
     print("\n6. Снятие 1500")
     for acc in accounts:

@@ -11,8 +11,8 @@ class Person:
     def __init__(self, name, gender, age):
         if not name or not isinstance(name, str):
             raise ValueError("Введите корректное имя")
-        if gender not in ["М", "Ж", "м", "ж"]:
-            raise ValueError("Пол должен быть 'М' или 'Ж'")
+        if gender.lower() not in ("м", "ж"):
+            raise ValueError("Пол должен быть 'м' или 'ж'")
         if age < 0 or age > 116:
             raise ValueError("Возраст должен быть от 0 до 116 лет")
         self._name = name
@@ -68,11 +68,11 @@ class Employee(Person, ABC):
         super().__init__(name, gender, age)
         if salary < 0 or expenses < 0:
             raise ValueError("Зарплата и расходы не могут быть отрицательными")
-        if expenses > salary:
-            raise ValueError(f"Сотрудник {name} тратит больше, чем получает! Ему придётся не сладко.")
         self._position = position
         self._salary = salary
         self._expenses = expenses
+        if expenses > salary:
+            print(f"Сотрудник {self._name} умер, так как тратит больше, чем получает.")
 
     def get_info(self):
         """
@@ -225,10 +225,7 @@ if __name__ == '__main__':
     manager = Manager("Ольга", "Ж", 40, salary=150000, expenses=50000)
     manager.add_subordinate("Иван")
 
-    try:
-        bad_designer = Designer("Петя", "М", 20, salary=30000, expenses=50000)
-    except ValueError as e:
-        print(f"Ошибка при создании: {e}")
+    bad_designer = Designer("Петя", "М", 20, salary=30000, expenses=50000)
 
     designer = Designer("Анна", "Ж", 22, salary=80000, expenses=30000)
 
@@ -237,7 +234,7 @@ if __name__ == '__main__':
     print(f"Ольга накопит до пенсии: {manager.calculate_pension_savings()} руб.")
 
     print("\n4. Полиморфизм (Список сотрудников)")
-    employees = [dev, manager, designer]
+    employees = (dev, manager, designer)
     for emp in employees:
         print(emp.get_info())
         print("  ->", emp.work())

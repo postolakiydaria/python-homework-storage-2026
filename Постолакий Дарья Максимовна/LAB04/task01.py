@@ -6,10 +6,8 @@ class Transport:
     Базовый класс для описания общих характеристик транспорта.
     """
     def __init__(self, speed, capacity):
-        self.__speed = None
-        self.__capacity = None
-        self.speed = speed
-        self.capacity = capacity
+        self._speed = speed
+        self._capacity = capacity
 
     @property
     def speed(self):
@@ -17,7 +15,7 @@ class Transport:
         Возвращает скорость транспорта.
         :return: Скорость.
         """
-        return self.__speed
+        return self._speed
 
     @speed.setter
     def speed(self, value):
@@ -28,7 +26,7 @@ class Transport:
         """
         if value < 0:
             raise ValueError("Скорость не может быть отрицательной!")
-        self.__speed = value
+        self._speed = value
 
     @property
     def capacity(self):
@@ -36,7 +34,7 @@ class Transport:
         Возвращает вместимость транспорта.
         :return: Вместимость.
         """
-        return self.__capacity
+        return self._capacity
 
     @capacity.setter
     def capacity(self, value):
@@ -47,9 +45,9 @@ class Transport:
         """
         if value < 0:
             raise ValueError("Вместимость не может быть отрицательной!")
-        self.__capacity = value
+        self._capacity = value
 
-    def get_info(self):
+    def __str__(self):
         """
         Возвращает строку с основными характеристиками.
         :return: Строка характеристик.
@@ -67,11 +65,18 @@ class Transport:
     @classmethod
     def from_dict(cls, data):
         """
-        Создает объект из словаря.
+        Создает объект из словаря с валидацией.
         :param data: Словарь с ключами speed и capacity.
         :return: Новый объект.
+        :raises ValueError: Если данные некорректны.
         """
-        return cls(speed=data.get("speed", 0), capacity=data.get("capacity", 0))
+        speed = data.get("speed", 0)
+        capacity = data.get("capacity", 0)
+        if not isinstance(speed, (int, float)) or speed < 0:
+            raise ValueError("Некорректная скорость в словаре: должна быть неотрицательным числом")
+        if not isinstance(capacity, int) or capacity < 0:
+            raise ValueError("Некорректная вместимость в словаре: должна быть целым неотрицательным числом")
+        return cls(speed=speed, capacity=capacity)
 
     @staticmethod
     def get_vehicle_type():
@@ -105,12 +110,12 @@ class Bus(Transport):
         """
         self._route = value
 
-    def get_info(self):
+    def __str__(self):
         """
         Переопределяет метод родителя, добавляя маршрут.
         :return: Строка характеристик.
         """
-        return super().get_info() + f" Маршрут: {self.route}"
+        return super().__str__() + f" Маршрут: {self._route}"
 
 class Truck(Transport):
     """
@@ -135,14 +140,14 @@ class Truck(Transport):
         :param price_per_km: Цена за км.
         :return: Стоимость.
         """
-        return distance * price_per_km * self.load_capacity
+        return distance * price_per_km * self._load_capacity
 
-    def get_info(self):
+    def __str__(self):
         """
         Переопределяет метод родителя.
         :return: Строка характеристик.
         """
-        return super().get_info() + f" Грузоподъемность: {self.load_capacity} т."
+        return super().__str__() + f" Грузоподъемность: {self._load_capacity} т."
 
     @classmethod
     def from_dict(cls, data):
@@ -150,12 +155,18 @@ class Truck(Transport):
         Создает грузовик из словаря.
         :param data: Словарь с ключами speed, capacity и load_capacity.
         :return: Новый объект Truck.
+        :raises ValueError: Если данные некорректны.
         """
-        return cls(
-            speed=data.get("speed", 0),
-            capacity=data.get("capacity", 0),
-            load_capacity=data.get("load_capacity", 0.0)  # достаем грузоподъемность
-        )
+        speed = data.get("speed", 0)
+        capacity = data.get("capacity", 0)
+        load_capacity = data.get("load_capacity", 0.0)
+        if not isinstance(speed, (int, float)) or speed < 0:
+            raise ValueError("Некорректная скорость в словаре")
+        if not isinstance(capacity, int) or capacity < 0:
+            raise ValueError("Некорректная вместимость в словаре")
+        if not isinstance(load_capacity, (int, float)) or load_capacity < 0:
+            raise ValueError("Некорректная грузоподъемность в словаре")
+        return cls(speed=speed, capacity=capacity, load_capacity=load_capacity)
 
 class Taxi(Transport):
     """
@@ -179,22 +190,25 @@ class Taxi(Transport):
         :param distance: Расстояние.
         :return: Стоимость.
         """
-        return distance * self.tariff
+        return distance * self._tariff
 
-    def get_info(self):
+    def __str__(self):
         """
         Переопределяет метод родителя.
         :return: Строка характеристик.
         """
-        return super().get_info() + f" Тариф: {self.tariff} руб/км"
+        return super().__str__() + f" Тариф: {self._tariff} руб/км"
 
 if __name__ == '__main__':
     bus = Bus(speed=60, capacity=30, route="ул. Ленина - ул. Мира") # создание через конструктор
-    print(bus.get_info())
+    print(bus)
 
     truck_data = {"speed": 80, "capacity": 2, "load_capacity": 10.0} # создание через метод from_dict
-    truck = Truck.from_dict(truck_data)
-    print(truck.get_info())
+    try:
+        truck = Truck.from_dict(truck_data)
+        print(truck)
+    except ValueError as e:
+        print(f"Ошибка при создании грузовика: {e}")
 
     print("\nПроверка валидации:") # недопустимая скорость
     try:
@@ -206,6 +220,6 @@ if __name__ == '__main__':
 
     print("\nПолиморфный вызов методов:")
     taxi = Taxi(speed=100, capacity=4, tariff=50.0)
-    vehicles = [bus, truck, taxi]
+    vehicles = (bus, truck, taxi)
     for vehicle in vehicles:
-        print(vehicle.get_info())
+        print(vehicle)
