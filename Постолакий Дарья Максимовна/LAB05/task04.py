@@ -2,7 +2,6 @@
 
 
 import argparse
-import os
 
 def process_file(input_path, output_path, replace_arg, footer, force):
     """
@@ -17,11 +16,6 @@ def process_file(input_path, output_path, replace_arg, footer, force):
     :raises FileExistsError: Если выходной файл существует, а force=False.
     :raises ValueError: Если replace_arg неверного формата.
     """
-    if not os.path.exists(input_path):
-        raise FileNotFoundError("Ошибка: Входной файл не найден!")
-    if os.path.exists(output_path) and not force:
-        raise FileExistsError("Ошибка: Выходной файл уже существует. Используйте флаг --force для перезаписи.")
-
     old_str = None
     new_str = None
     if replace_arg:
@@ -29,8 +23,11 @@ def process_file(input_path, output_path, replace_arg, footer, force):
             raise ValueError("Ошибка: Аргумент --replace должен быть в формате OLD=NEW.")
         old_str, new_str = replace_arg.split("=", 1)
 
-    with open(input_path, "r", encoding="utf-8") as file:
-        content = file.read()
+    try:
+        with open(input_path, "r", encoding="utf-8") as file:
+            content = file.read()
+    except FileNotFoundError:
+        raise FileNotFoundError("Ошибка: Входной файл не найден!")
 
     replace_count = 0
     if old_str is not None:
@@ -42,9 +39,13 @@ def process_file(input_path, output_path, replace_arg, footer, force):
             content += "\n"
         content += footer + "\n"
 
-    mode = "w" if force else "x"
-    with open(output_path, mode, encoding="utf-8") as file:
-        file.write(content)
+    try:
+        mode = "w" if force else "x"
+        with open(output_path, mode, encoding="utf-8") as file:
+            file.write(content)
+    except FileExistsError:
+        raise FileExistsError("Ошибка: Выходной файл уже существует. Используйте флаг --force для перезаписи.")
+
     return replace_count
 
 if __name__ == '__main__':

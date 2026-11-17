@@ -14,18 +14,19 @@ def calculate(x, y, operation):
     :return: Результат операции.
     :raises ValueError: Если операция неизвестна или происходит деление на ноль.
     """
-    if operation == "add":
-        return x + y
-    elif operation == "sub":
-        return x - y
-    elif operation == "mul":
-        return x * y
-    elif operation == "div":
-        if y == 0:
-            raise ValueError("Деление на ноль невозможно!")
-        return x / y
-    else:
-        raise ValueError(f"Неизвестная операция: {operation}")
+    match operation:
+        case "add":
+            return x + y
+        case "sub":
+            return x - y
+        case "mul":
+            return x * y
+        case "div":
+            if y == 0:
+                raise ValueError("Ошибка: деление на ноль невозможно!")
+            return x / y
+        case _:
+            raise ValueError(f"Неизвестная операция: {operation}")
 
 def save_result(filepath, result_text):
     """
